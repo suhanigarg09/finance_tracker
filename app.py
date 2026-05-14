@@ -3,7 +3,10 @@ import sqlite3
 import os
 from openai import OpenAI
 from flask import request, jsonify
-client = OpenAI(api_key=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)
+
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY")
+)
 app = Flask(__name__)
 
 # @app.route('/')
