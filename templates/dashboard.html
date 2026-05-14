@@ -190,6 +190,56 @@ async function deleteTxn(id) {
 
 loadData();
 </script>
+<hr>
 
+<h2>AI Financial Assistant</h2>
+
+<form id="chat-form">
+    <input
+        type="text"
+        id="message"
+        placeholder="Ask about your spending..."
+        required
+    >
+
+    <button type="submit">
+        Send
+    </button>
+</form>
+
+<br>
+
+<div id="response"></div>
+
+<script>
+
+document.getElementById("chat-form")
+.addEventListener("submit", async function(e){
+
+    e.preventDefault();
+
+    const message =
+        document.getElementById("message").value;
+
+    const response = await fetch("/chat", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type":
+            "application/x-www-form-urlencoded"
+        },
+
+        body: `message=${message}`
+
+    });
+
+    const data = await response.json();
+
+    document.getElementById("response")
+        .innerText = data.reply;
+});
+
+</script>
 </body>
 </html>
