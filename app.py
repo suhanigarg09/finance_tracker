@@ -1,12 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for,jsonify
 import sqlite3
 import os
-from openai import OpenAI
-from flask import request, jsonify
 
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY")
-)
 app = Flask(__name__)
 
 # @app.route('/')
@@ -67,6 +62,60 @@ def login():
             return "Invalid Login ❌"
 
     return render_template("login.html")
+# AI CHATBOT ROUTE
+
+@app.route("/chat", methods=["POST"])
+def chat():
+
+    data = request.get_json()
+
+    user_message = data["message"].lower()
+
+    reply = "Sorry, I could not understand that."
+
+    # Greeting
+    if "hello" in user_message or "hi" in user_message:
+        reply = "Hello! I am your AI Finance Advisor."
+
+    # Saving
+    elif "save" in user_message or "saving" in user_message:
+        reply = "Try reducing unnecessary expenses and follow a monthly budget."
+
+    # Food
+    elif "food" in user_message:
+        reply = "Your food expenses seem high this month."
+
+    # Investment
+    elif "investment" in user_message or "invest" in user_message:
+        reply = "Consider SIPs and long-term investments for better growth."
+
+    # Expense
+    elif "expense" in user_message or "spending" in user_message:
+        reply = "Track daily expenses carefully for better financial control."
+
+    # Balance
+    elif "balance" in user_message:
+        reply = "Maintain a positive balance by reducing unnecessary spending."
+
+    # Budget
+    elif "budget" in user_message:
+        reply = "Create monthly spending limits for better money management."
+
+    # Shopping
+    elif "shopping" in user_message:
+        reply = "Avoid impulse purchases and compare prices before buying."
+
+    # Loan / EMI
+    elif "loan" in user_message or "emi" in user_message:
+        reply = "Keep EMI payments below 40 percent of monthly income."
+
+    # Emergency
+    elif "emergency" in user_message:
+        reply = "Maintain an emergency fund for unexpected situations."
+
+    return jsonify({
+        "reply": reply
+    }) 
 
 # Register
 @app.route("/register", methods=["GET", "POST"])
@@ -198,33 +247,6 @@ def delete(id):
     conn.close()
 
     return jsonify({"message": "Deleted successfully"})
-    
-@app.route("/chat", methods=["POST"])
-def chat():
-
-    user_message = request.form["message"]
-
-    response = client.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": """
-                You are an AI finance assistant.
-                Help users manage expenses,
-                save money, and analyze spending.
-                """
-            },
-            {
-                "role": "user",
-                "content": user_message
-            }
-        ]
-    )
-
-    reply = response.choices[0].message.content
-
-    return jsonify({"reply": reply})
 
 # Dashboard
 @app.route("/dashboard")
