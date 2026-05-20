@@ -6,10 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
+
 <body>
-
 <button id="themeToggle">🌙</button>
-
 <script>
 const toggleBtn = document.getElementById("themeToggle");
 
@@ -32,8 +31,9 @@ toggleBtn.onclick = () => {
 };
 </script>
 
+
 <h1>💰Master₹</h1>
-<p id="finance">A smart way to manage expenses</p>
+<P id="finance">A smart way to manage expenses</P>
 
 <div class="form">
     <h2>Add Transaction</h2>
@@ -46,34 +46,39 @@ toggleBtn.onclick = () => {
         <option>Income</option>
     </select>
 
-    <input id="limit" type="number" placeholder="Set Monthly Limit ₹">
-    <button onclick="setLimit()" id="buttonlimit">Set Limit</button>
-
+    <input
+    type="number"
+    id="expenseLimit"
+    placeholder="Enter limit"
+/>
+    <button   onclick="setLimit()" id="buttonlimit" >Set Limit</button>
     <br>
+    
 
     <input id="date" type="date" required>
 
     <br>
-
     <button onclick="addData()">➕ Add Transaction</button>
 </div>
 
 <h2>📋 Transactions</h2>
 <ul id="list"></ul>
 
+
+
+
 <h2>🤖 AI Insights</h2>
 <p id="insight"></p>
 <p id="balance"></p>
-
 <h2 id="Month">📅 Monthly Report</h2>
 <div id="monthlyReport"></div>
+
+
 
 <a href="/login">Logout</a>
 
 <script>
-
 async function addData() {
-
     const data = {
         category: document.getElementById("category").value,
         amount: document.getElementById("amount").value,
@@ -93,20 +98,18 @@ async function addData() {
     });
 
     loadData();
+    loadInsight();
 }
-
 function setLimit() {
+    let expenselimit = document.getElementById("limit").value;
 
-    let limit = document.getElementById("limit").value;
-
-    if (limit) {
-        localStorage.setItem("expenseLimit", limit);
+    if (expenselimit) {
+        localStorage.setItem("expenseLimit", expenselimit);
         alert("✅ Limit set successfully!");
     }
 }
 
 async function loadData() {
-
     const res = await fetch("/data");
     const data = await res.json();
 
@@ -114,61 +117,97 @@ async function loadData() {
     list.innerHTML = "";
 
     data.forEach(txn => {
+    let li = document.createElement("li");
 
-        let li = document.createElement("li");
+    li.innerHTML = `
+        <div>
+            <strong>${txn[2]}</strong><br>
+            ${txn[1]} • ₹${txn[3]}
+        </div>
+        <button onclick="deleteTxn(${txn[0]})">❌</button>
+    `;
 
-        li.innerHTML = `
-            <div>
-                <strong>${txn[2]}</strong><br>
-                ${txn[1]} • ₹${txn[3]}
-            </div>
-
-            <button onclick="deleteTxn(${txn[0]})">
-                ❌
-            </button>
-        `;
-
-        list.appendChild(li);
+    list.appendChild(li);
     });
 
     loadInsights();
     loadMonthly();
 }
 
+//toast msg
+function showToast(message){
+
+    let toast = document.getElementById("toast");
+
+    toast.innerText = message;
+
+    toast.style.display = "block";
+
+    setTimeout(() => {
+
+        toast.style.display = "none";
+
+    }, 3000);
+}
+
 async function loadInsights() {
 
     const res = await fetch("/insights");
+
     const data = await res.json();
 
+    // SHOW INSIGHTS
+
     document.getElementById("insight").innerText =
-        `Income: ₹${data.income} | Expense: ₹${data.expense} | ${data.message}`;
+        `Income: ₹${data.income} | Expense: ₹${data.expense}`;
+
+    // SHOW BALANCE
 
     document.getElementById("balance").innerText =
         `Balance: ₹${data.balance}`;
 
-    if (data.expense > data.income) {
-        alert("⚠️ Overspending Alert!");
-    }
+    // GET LIMIT
 
-    let limit = localStorage.getItem("expenseLimit");
+    let limit = Number(
+        document.getElementById("expenseLimit").value
+    );
 
-    if (limit && data.expense >= limit) {
-        alert("🚨 You reached your expense limit!");
-    }
+    // ALERT WHEN 80% LIMIT REACHED
+
+    if(limit > 0 && data.expense >= 0.8 * limit){
+
+        
+        let audio = new Audio(
+            "static/sound/computer-notification-email-alert-betacut-1-00-01.mp3"
+        );
+
+        audio.play();
+        showToast("⚠️ Warning: You are near your spending limit!");
+
 }
 
-async function loadMonthly() {
+    // ALERT WHEN LIMIT EXCEEDED
 
+    if(limit > 0 && data.expense >= limit){
+
+        showToast("🚨 Expense limit exceeded!");
+        let audio = new Audio(
+            "static/sound/computer-notification-email-alert-betacut-1-00-01.mp3"
+        );
+
+        audio.play();
+        showToast("🚨 Expense limit exceeded!");
+
+    }
+}
+async function loadMonthly() {
     const res = await fetch("/monthly");
     const data = await res.json();
 
-    let container =
-        document.getElementById("monthlyReport");
-
+    let container = document.getElementById("monthlyReport");
     container.innerHTML = "";
 
     for (let month in data) {
-
         let m = data[month];
 
         let div = document.createElement("div");
@@ -180,6 +219,7 @@ async function loadMonthly() {
             Balance: ₹${m.balance}
         `;
 
+        // color logic
         if (m.balance >= 0) {
             div.style.color = "lightgreen";
         } else {
@@ -189,9 +229,73 @@ async function loadMonthly() {
         container.appendChild(div);
     }
 }
+// OPEN/CLOSE CHATBOX
+
+function toggleChat(){
+
+    let chat = document.getElementById("chatContainer");
+
+    if(chat.style.display === "flex"){
+
+        chat.style.display = "none";
+
+    }else{
+
+        chat.style.display = "flex";
+    }
+}
+
+// SEND MESSAGE
+
+async function sendMessage(){
+
+    let input = document.getElementById("userInput");
+
+    let message = input.value;
+
+    if(message.trim() === "") return;
+
+    let chatBox = document.getElementById("chatBox");
+
+    // USER MESSAGE
+
+    chatBox.innerHTML += `
+        <div class="message user">
+            ${message}
+        </div>
+    `;
+
+    // SEND TO FLASK
+
+    const res = await fetch("/chat",{
+
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/json"
+        },
+
+        body: JSON.stringify({
+            message: message
+        })
+    });
+
+    const data = await res.json();
+
+    // BOT MESSAGE
+
+    chatBox.innerHTML += `
+        <div class="message bot">
+            ${data.reply}
+        </div>
+    `;
+
+    input.value = "";
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
 async function deleteTxn(id) {
-
     await fetch(`/delete/${id}`, {
         method: "DELETE"
     });
@@ -200,68 +304,40 @@ async function deleteTxn(id) {
 }
 
 loadData();
-
 </script>
 
-<hr>
+<!-- FLOATING CHAT BUTTON -->
 
-<h2>🤖 AI Financial Assistant</h2>
+<div id="chatToggle" onclick="toggleChat()">
+    💬
+</div>
 
-<input
-    type="text"
-    id="message"
-    placeholder="Ask about your spending..."
->
+<!-- CHATBOX -->
 
-<button id="sendBtn">
-    Send
-</button>
+<div id="chatContainer">
 
-<br><br>
+    <div class="chat-header">
+        🤖 AI Advisor
+    </div>
 
-<div id="response"></div>
+    <div id="chatBox"></div>
 
-<script>
+    <div class="chat-input-area">
 
-document
-.getElementById("sendBtn")
-.addEventListener("click", async function(){
+        <input
+            type="text"
+            id="userInput"
+            placeholder="Ask something..."
+        >
 
-    const message =
-        document.getElementById("message").value;
+        <button onclick="sendMessage()">
+            Send
+        </button>
 
-    if (!message) return;
+    </div>
 
-    try {
-
-        const response = await fetch("/chat", {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type":
-                "application/x-www-form-urlencoded"
-            },
-
-            body:
-                `message=${encodeURIComponent(message)}`
-        });
-
-        const data = await response.json();
-
-        document.getElementById("response")
-            .innerText = data.reply;
-
-    } catch(err) {
-
-        document.getElementById("response")
-            .innerText =
-            "Error connecting to AI.";
-    }
-
-});
-
-</script>
+</div>
+<div id="toast"></div>
 
 </body>
 </html>
